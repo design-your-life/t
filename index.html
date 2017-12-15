@@ -102,13 +102,13 @@
 				inputResolition.max = photoCapabilities.imageWidth.max;
 				inputResolition.step = photoCapabilities.imageWidth.step;
 
-				inputZoom.min = capabilities.zoom.min;
-				inputZoom.max = capabilities.zoom.max;
-				inputZoom.step = capabilities.zoom.step;
-				inputZoom.value = settings.zoom;
-				inputZoom.oninput = function(event) {
-					track.applyConstraints({advanced: [ {zoom: event.target.value} ]});
-				}
+				// inputZoom.min = capabilities.zoom.min;
+				// inputZoom.max = capabilities.zoom.max;
+				// inputZoom.step = capabilities.zoom.step;
+				// inputZoom.value = settings.zoom;
+				// inputZoom.oninput = function(event) {
+				// 	track.applyConstraints({advanced: [ {zoom: event.target.value} ]});
+				// }
 
 				return imageCapture.getPhotoSettings();
 			})
@@ -120,8 +120,8 @@
 			function onTakePhotoButtonClick() {
 				imageCapture.takePhoto({
 					imageWidth: inputResolition.value,
-					zoom: inputZoom.value,
-					exposureCompensation: inputEV.value,
+					// zoom: inputZoom.value,
+					// exposureCompensation: inputEV.value,
 				})
 				.then(blob => createImageBitmap(blob))
 				.then(imageBitmap => {
