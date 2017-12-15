@@ -24,146 +24,121 @@
 		<link rel="icon" href="../images/favicon.ico">
 		
 		<link rel="stylesheet" href="https://googlechrome.github.io/samples/styles/main.css">
-		<link rel="stylesheet" href="https://googlechrome.github.io/samples/image-capture/grab-frame-take-photo.css">
+		<link rel="stylesheet" href="https://googlechrome.github.io/samples/image-capture/photo-resolution.css">
 		
 	</head>
 
 	<body>
-<div id='results'>
-	<div>
 		<video autoplay></video>
-		<button id='getUserMediaButton'>Get User Media</button>
-	</div>
-	<div>
-		<canvas id='grabFrameCanvas'></canvas>
-		<button id='grabFrameButton' disabled>Grab Frame</button>
-	</div>
-	<div>
-		<canvas id='takePhotoCanvas'></canvas>
-		<button id='takePhotoButton' disabled>Take Photo</button>
-	</div>
-</div>
+		<input type="range">
+		<button id="takePhotoButton" disabled>Take Photo</button>
+		<canvas></canvas>
 
-<script>
-	var ChromeSamples = {
-		log: function() {
-			var line = Array.prototype.slice.call(arguments).map(function(argument) {
-				return typeof argument === 'string' ? argument : JSON.stringify(argument);
-			}).join(' ');
+		<script>
+			var ChromeSamples = {
+				log: function() {
+					var line = Array.prototype.slice.call(arguments).map(function(argument) {
+						return typeof argument === 'string' ? argument : JSON.stringify(argument);
+					}).join(' ');
 
-			document.querySelector('#log').textContent += line + '\n';
-		},
+					document.querySelector('#log').textContent += line + '\n';
+				},
 
-		clearLog: function() {
-			document.querySelector('#log').textContent = '';
-		},
+				clearLog: function() {
+					document.querySelector('#log').textContent = '';
+				},
 
-		setStatus: function(status) {
-			document.querySelector('#status').textContent = status;
-		},
+				setStatus: function(status) {
+					document.querySelector('#status').textContent = status;
+				},
 
-		setContent: function(newContent) {
-			var content = document.querySelector('#content');
-			while(content.hasChildNodes()) {
-				content.removeChild(content.lastChild);
+				setContent: function(newContent) {
+					var content = document.querySelector('#content');
+					while(content.hasChildNodes()) {
+						content.removeChild(content.lastChild);
+					}
+					content.appendChild(newContent);
+				}
+			};
+		</script>
+
+		<h3>Live Output</h3>
+		<div id="output" class="output">
+			<div id="content"></div>
+			<div id="status"></div>
+			<pre id="log"></pre>
+		</div>
+
+
+		<script>
+			if (/Chrome\/(\d+\.\d+.\d+.\d+)/.test(navigator.userAgent)){
+				// Let's log a warning if the sample is not supposed to execute on this
+				// version of Chrome.
+				if (61 > parseInt(RegExp.$1)) {
+					ChromeSamples.setStatus('Warning! Keep in mind this sample has been tested with Chrome ' + 61 + '.');
+				}
 			}
-			content.appendChild(newContent);
-		}
-	};
-</script>
-
-<h3>Live Output</h3>
-<div id="output" class="output">
-	<div id="content"></div>
-	<div id="status"></div>
-	<pre id="log"></pre>
-</div>
-
-
-<script>
-	if (/Chrome\/(\d+\.\d+.\d+.\d+)/.test(navigator.userAgent)){
-		// Let's log a warning if the sample is not supposed to execute on this
-		// version of Chrome.
-		if (56 > parseInt(RegExp.$1)) {
-			ChromeSamples.setStatus('Warning! Keep in mind this sample has been tested with Chrome ' + 56 + '.');
-		}
-	}
-</script>
 
 
 
+			const input = document.querySelector('input[type="range"]');
 
-	
-		
-			<script>var imageCapture;
+			var imageCapture;
 
-function onGetUserMediaButtonClick() {
-	navigator.mediaDevices.getUserMedia({video: true})
-	.then(mediaStream => {
-		document.querySelector('video').srcObject = mediaStream;
+			navigator.mediaDevices.getUserMedia({video: true})
+			.then(mediaStream => {
+				document.querySelector('video').srcObject = mediaStream;
 
-		const track = mediaStream.getVideoTracks()[0];
-		imageCapture = new ImageCapture(track);
-	})
-	.catch(error => ChromeSamples.log(error));
-}
+				const track = mediaStream.getVideoTracks()[0];
+				imageCapture = new ImageCapture(track);
 
-function onGrabFrameButtonClick() {
-	imageCapture.grabFrame()
-	.then(imageBitmap => {
-		const canvas = document.querySelector('#grabFrameCanvas');
-		drawCanvas(canvas, imageBitmap);
-	})
-	.catch(error => ChromeSamples.log(error));
-}
+				return imageCapture.getPhotoCapabilities();
+			})
+			.then(photoCapabilities => {
+				const settings = imageCapture.track.getSettings();
 
-function onTakePhotoButtonClick() {
-	imageCapture.takePhoto()
-	.then(blob => createImageBitmap(blob))
-	.then(imageBitmap => {
-		const canvas = document.querySelector('#takePhotoCanvas');
-		drawCanvas(canvas, imageBitmap);
-	})
-	.catch(error => ChromeSamples.log(error));
-}
+				input.min = photoCapabilities.imageWidth.min;
+				input.max = photoCapabilities.imageWidth.max;
+				input.step = photoCapabilities.imageWidth.step;
 
-/* Utils */
+				return imageCapture.getPhotoSettings();
+			})
+			.then(photoSettings => {
+				input.value = photoSettings.imageWidth;
+			})
+			.catch(error => ChromeSamples.log('Argh!', error.name || error));
 
-function drawCanvas(canvas, img) {
-	canvas.width = getComputedStyle(canvas).width.split('px')[0] * 8
-	canvas.height = getComputedStyle(canvas).height.split('px')[0] * 8
-	let ratio  = Math.min(canvas.width / img.width, canvas.height / img.height);
-	let x = (canvas.width - img.width * ratio) / 2;
-	let y = (canvas.height - img.height * ratio) / 2;
-	canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-	canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
-			x, y, img.width * ratio, img.height * ratio);
-}
+			function onTakePhotoButtonClick() {
+				imageCapture.takePhoto({imageWidth: input.value})
+				.then(blob => createImageBitmap(blob))
+				.then(imageBitmap => {
+					drawCanvas(imageBitmap);
+					ChromeSamples.log(`Photo size is ${imageBitmap.width}x${imageBitmap.height}`);
+				})
+				.catch(error => ChromeSamples.log(error));
+			}
 
-document.querySelector('video').addEventListener('play', function() {
-	document.querySelector('#grabFrameButton').disabled = false;
-	document.querySelector('#takePhotoButton').disabled = false;
-});
-</script>
-		
-	
+			document.querySelector('video').addEventListener('play', function() {
+				document.querySelector('#takePhotoButton').disabled = false;
+			});
 
-	
-		<h3>JavaScript Snippet</h3>
-	
+			/* Utils */
 
-	
-		<figure class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">imageCapture</span><span class="p">;</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages><span class="kd">function</span> <span class="nx">onGetUserMediaButtonClick</span><span class="p">()</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>  <span class="nb">navigator</span><span class="p">.</span><span class="nx">mediaDevices</span><span class="p">.</span><span class="nx">getUserMedia</span><span class="p">({</span><span class="na">video</span><span class="p">:</span> <span class="kc">true</span><span class="p">})</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">mediaStream</span> <span class="o">=&gt;</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>    <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'video'</span><span class="p">).</span><span class="nx">srcObject</span> <span class="o">=</span> <span class="nx">mediaStream</span><span class="p">;</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages>    <span class="kd">const</span> <span class="nx">track</span> <span class="o">=</span> <span class="nx">mediaStream</span><span class="p">.</span><span class="nx">getVideoTracks</span><span class="p">()[</span><span class="mi">0</span><span class="p">];</span><br data-jekyll-commonmark-ghpages>    <span class="nx">imageCapture</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">ImageCapture</span><span class="p">(</span><span class="nx">track</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>  <span class="p">})</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="nx">ChromeSamples</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span><br data-jekyll-commonmark-ghpages><span class="p">}</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages><span class="kd">function</span> <span class="nx">onGrabFrameButtonClick</span><span class="p">()</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>  <span class="nx">imageCapture</span><span class="p">.</span><span class="nx">grabFrame</span><span class="p">()</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">imageBitmap</span> <span class="o">=&gt;</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>    <span class="kd">const</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'#grabFrameCanvas'</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>    <span class="nx">drawCanvas</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span> <span class="nx">imageBitmap</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>  <span class="p">})</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="nx">ChromeSamples</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span><br data-jekyll-commonmark-ghpages><span class="p">}</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages><span class="kd">function</span> <span class="nx">onTakePhotoButtonClick</span><span class="p">()</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>  <span class="nx">imageCapture</span><span class="p">.</span><span class="nx">takePhoto</span><span class="p">()</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">blob</span> <span class="o">=&gt;</span> <span class="nx">createImageBitmap</span><span class="p">(</span><span class="nx">blob</span><span class="p">))</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="nx">then</span><span class="p">(</span><span class="nx">imageBitmap</span> <span class="o">=&gt;</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>    <span class="kd">const</span> <span class="nx">canvas</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'#takePhotoCanvas'</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>    <span class="nx">drawCanvas</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span> <span class="nx">imageBitmap</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>  <span class="p">})</span><br data-jekyll-commonmark-ghpages>  <span class="p">.</span><span class="k">catch</span><span class="p">(</span><span class="nx">error</span> <span class="o">=&gt;</span> <span class="nx">ChromeSamples</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">error</span><span class="p">));</span><br data-jekyll-commonmark-ghpages><span class="p">}</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages><span class="cm">/* Utils */</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages><span class="kd">function</span> <span class="nx">drawCanvas</span><span class="p">(</span><span class="nx">canvas</span><span class="p">,</span> <span class="nx">img</span><span class="p">)</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>  <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">getComputedStyle</span><span class="p">(</span><span class="nx">canvas</span><span class="p">).</span><span class="nx">width</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">'px'</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span><br data-jekyll-commonmark-ghpages>  <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">getComputedStyle</span><span class="p">(</span><span class="nx">canvas</span><span class="p">).</span><span class="nx">height</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">'px'</span><span class="p">)[</span><span class="mi">0</span><span class="p">];</span><br data-jekyll-commonmark-ghpages>  <span class="kd">let</span> <span class="nx">ratio</span>  <span class="o">=</span> <span class="nb">Math</span><span class="p">.</span><span class="nx">min</span><span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">/</span> <span class="nx">img</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">/</span> <span class="nx">img</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>  <span class="kd">let</span> <span class="nx">x</span> <span class="o">=</span> <span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span> <span class="o">-</span> <span class="nx">img</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span><br data-jekyll-commonmark-ghpages>  <span class="kd">let</span> <span class="nx">y</span> <span class="o">=</span> <span class="p">(</span><span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span> <span class="o">-</span> <span class="nx">img</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">;</span><br data-jekyll-commonmark-ghpages>  <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">'2d'</span><span class="p">).</span><span class="nx">clearRect</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">canvas</span><span class="p">.</span><span class="nx">height</span><span class="p">);</span><br data-jekyll-commonmark-ghpages>  <span class="nx">canvas</span><span class="p">.</span><span class="nx">getContext</span><span class="p">(</span><span class="s1">'2d'</span><span class="p">).</span><span class="nx">drawImage</span><span class="p">(</span><span class="nx">img</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">width</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">height</span><span class="p">,</span><br data-jekyll-commonmark-ghpages>      <span class="nx">x</span><span class="p">,</span> <span class="nx">y</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">width</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">,</span> <span class="nx">img</span><span class="p">.</span><span class="nx">height</span> <span class="o">*</span> <span class="nx">ratio</span><span class="p">);</span><br data-jekyll-commonmark-ghpages><span class="p">}</span><br data-jekyll-commonmark-ghpages><br data-jekyll-commonmark-ghpages><span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'video'</span><span class="p">).</span><span class="nx">addEventListener</span><span class="p">(</span><span class="s1">'play'</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span><br data-jekyll-commonmark-ghpages>  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'#grabFrameButton'</span><span class="p">).</span><span class="nx">disabled</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span><br data-jekyll-commonmark-ghpages>  <span class="nb">document</span><span class="p">.</span><span class="nx">querySelector</span><span class="p">(</span><span class="s1">'#takePhotoButton'</span><span class="p">).</span><span class="nx">disabled</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span><br data-jekyll-commonmark-ghpages><span class="p">});</span></code></pre></figure>
-	
+			function drawCanvas(img) {
+				const canvas = document.querySelector('canvas');
+				canvas.width = getComputedStyle(canvas).width.split('px')[0];
+				canvas.height = getComputedStyle(canvas).height.split('px')[0];
+				let ratio  = Math.min(canvas.width / img.width, canvas.height / img.height);
+				let x = (canvas.width - img.width * ratio) / 2;
+				let y = (canvas.height - img.height * ratio) / 2;
+				canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+				canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
+						x, y, img.width * ratio, img.height * ratio);
+			}
 
 
 
-<script>
-	document.querySelector('#getUserMediaButton').addEventListener('click', onGetUserMediaButtonClick);
-	document.querySelector('#grabFrameButton').addEventListener('click', onGrabFrameButtonClick);
-	document.querySelector('#takePhotoButton').addEventListener('click', onTakePhotoButtonClick);
-</script>
-
-		
+			document.querySelector('#takePhotoButton').addEventListener('click', onTakePhotoButtonClick)
+		</script>
 	</body>
 </html>
