@@ -105,14 +105,14 @@
 					inputResolution.max = photoCapabilities.imageWidth.max
 					inputResolution.step = photoCapabilities.imageWidth.step
 
-					if (!('zoom' in capabilities)) {
-						return Promise.reject('Zoom is not supported by ' + track.label)
-					}
+					// if (!('zoom' in capabilities)) {
+					// 	return Promise.reject('Zoom is not supported by ' + track.label)
+					// }
 
-					inputZoom.min = capabilities.zoom.min
-					inputZoom.max = capabilities.zoom.max
-					inputZoom.step = capabilities.zoom.step
-					inputZoom.value = settings.zoom
+					// inputZoom.min = capabilities.zoom.min
+					// inputZoom.max = capabilities.zoom.max
+					// inputZoom.step = capabilities.zoom.step
+					// inputZoom.value = settings.zoom
 					inputZoom.oninput = function(event) {
 						track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
 					}
