@@ -77,63 +77,70 @@
 				// Let's log a warning if the sample is not supposed to execute on this
 				// version of Chrome.
 				if (61 > parseInt(RegExp.$1)) {
-					ChromeSamples.setStatus('Warning! Keep in mind this sample has been tested with Chrome ' + 61 + '.');
+					ChromeSamples.setStatus('Warning! Keep in mind this sample has been tested with Chrome ' + 61 + '.')
 				}
 			}
-
 
 
 
 			var imageCapture;
 
 			navigator.mediaDevices.getUserMedia({video: true})
-			.then(mediaStream => {
-				document.querySelector('video').srcObject = mediaStream;
+				.then(async mediaStream => {
+					document.querySelector('video').srcObject = mediaStream
 
-				const track = mediaStream.getVideoTracks()[0];
-				imageCapture = new ImageCapture(track);
+					await sleep(1000) // crbug.com/711524
 
-				return imageCapture.getPhotoCapabilities();
-			})
-			.then(photoCapabilities => {
-				const settings = imageCapture.track.getSettings();
+					const track = mediaStream.getVideoTracks()[0]
+					const capabilities = track.getCapabilities()
+					imageCapture = new ImageCapture(track)
 
-				inputResolition.min = photoCapabilities.imageWidth.min;
-				inputResolition.max = photoCapabilities.imageWidth.max;
-				inputResolition.step = photoCapabilities.imageWidth.step;
+					return imageCapture.getPhotoCapabilities();
+				})
+				.then(photoCapabilities => {
 
-				// inputZoom.min = capabilities.zoom.min;
-				// inputZoom.max = capabilities.zoom.max;
-				// inputZoom.step = capabilities.zoom.step;
-				// inputZoom.value = settings.zoom;
-				// inputZoom.oninput = function(event) {
-				// 	track.applyConstraints({advanced: [ {zoom: event.target.value} ]});
-				// }
+					const settings = imageCapture.track.getSettings()
 
-				return imageCapture.getPhotoSettings();
-			})
-			.then(photoSettings => {
-				inputResolition.value = photoSettings.imageWidth;
-			})
-			.catch(error => ChromeSamples.log('Argh!', error.name || error));
+					inputResolution.min = photoCapabilities.imageWidth.min
+					inputResolution.max = photoCapabilities.imageWidth.max
+					inputResolution.step = photoCapabilities.imageWidth.step
+
+					if (!('zoom' in capabilities)) {
+						return Promise.reject('Zoom is not supported by ' + track.label)
+					}
+
+					inputZoom.min = capabilities.zoom.min
+					inputZoom.max = capabilities.zoom.max
+					inputZoom.step = capabilities.zoom.step
+					inputZoom.value = settings.zoom
+					inputZoom.oninput = function(event) {
+						track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
+					}
+
+					return imageCapture.getPhotoSettings()
+				})
+				.then(photoSettings => {
+					inputResolution.value = photoSettings.imageWidth
+				})
+				.catch(error => ChromeSamples.log('Argh!', error.name || error))
 
 			function onTakePhotoButtonClick() {
 				imageCapture.takePhoto({
-					imageWidth: inputResolition.value,
-					// zoom: inputZoom.value,
+					imageWidth: inputResolution.value,
+					zoom: inputZoom.value,
 					// exposureCompensation: inputEV.value,
 				})
 				.then(blob => createImageBitmap(blob))
 				.then(imageBitmap => {
-					drawCanvas(imageBitmap);
-					ChromeSamples.log(`Photo size is ${imageBitmap.width}x${imageBitmap.height}`);
+					drawCanvas(imageBitmap)
+					ChromeSamples.log(`Photo size is ${imageBitmap.width}x${imageBitmap.height}`)
 				})
-				.catch(error => ChromeSamples.log(error));
+				.catch(error => ChromeSamples.log(error))
 			}
 
 			document.querySelector('video').addEventListener('play', function() {
-				document.querySelector('#takePhotoButton').disabled = false;
-			});
+				document.querySelector('#takePhotoButton').disabled = false
+			})
 
 			/* Utils */
 
@@ -151,7 +158,7 @@
 
 
 			function sleep(ms = 0) {
-				return new Promise(r => setTimeout(r, ms));
+				return new Promise(r => setTimeout(r, ms))
 			}
 
 
