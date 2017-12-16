@@ -6,7 +6,7 @@
 		<meta name="description" content="Sample illustrating the use of Image Capture / Grab Frame - Take Photo.">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		
-		<title>Image Capture / Grab Frame - Take Photo Sample</title>
+		<title>📷📸📷</title>
 		<script>
 			// Add a global error event listener early on in the page load, to help ensure that browsers
 			// which don't support specific functionality still end up displaying a meaningful message.
@@ -33,7 +33,7 @@
 		<input id=inputResolution type="range">
 		<input id=inputEV type="range">
 		<input id=inputZoom type="range">
-		<button id="takePhotoButton" disabled>Take Photo</button>
+		<button id="takePhotoButton" disabled>📷📸📷</button>
 		<canvas></canvas>
 
 		<script>
@@ -64,7 +64,6 @@
 			};
 		</script>
 
-		<h3>Live Output</h3>
 		<div id="output" class="output">
 			<div id="content"></div>
 			<div id="status"></div>
@@ -73,46 +72,34 @@
 
 
 		<script>
-			if (/Chrome\/(\d+\.\d+.\d+.\d+)/.test(navigator.userAgent)){
-				// Let's log a warning if the sample is not supposed to execute on this
-				// version of Chrome.
-				if (61 > parseInt(RegExp.$1)) {
-					ChromeSamples.setStatus('Warning! Keep in mind this sample has been tested with Chrome ' + 61 + '.')
-				}
-			}
-
-
-
-			var imageCapture;
-
 			navigator.mediaDevices.getUserMedia({video: true})
 				.then(async mediaStream => {
 					document.querySelector('video').srcObject = mediaStream
 
 					await sleep(1000) // crbug.com/711524
 
-					const track = mediaStream.getVideoTracks()[0]
-					const capabilities = track.getCapabilities()
+					track = mediaStream.getVideoTracks()[0]
+					capabilities = track.getCapabilities()
 					imageCapture = new ImageCapture(track)
 
 					return imageCapture.getPhotoCapabilities();
 				})
 				.then(photoCapabilities => {
 
-					const settings = imageCapture.track.getSettings()
+					settings = imageCapture.track.getSettings()
 
 					inputResolution.min = photoCapabilities.imageWidth.min
 					inputResolution.max = photoCapabilities.imageWidth.max
 					inputResolution.step = photoCapabilities.imageWidth.step
 
-					// if (!('zoom' in capabilities)) {
-					// 	return Promise.reject('Zoom is not supported by ' + track.label)
-					// }
+					if (!('zoom' in capabilities)) {
+						return Promise.reject('Zoom is not supported by ' + track.label)
+					}
 
-					// inputZoom.min = capabilities.zoom.min
-					// inputZoom.max = capabilities.zoom.max
-					// inputZoom.step = capabilities.zoom.step
-					// inputZoom.value = settings.zoom
+					inputZoom.min = capabilities.zoom.min
+					inputZoom.max = capabilities.zoom.max
+					inputZoom.step = capabilities.zoom.step
+					inputZoom.value = settings.zoom
 					inputZoom.oninput = function(event) {
 						track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
 					}
@@ -128,7 +115,7 @@
 				imageCapture.takePhoto({
 					imageWidth: inputResolution.value,
 					zoom: inputZoom.value,
-					// exposureCompensation: inputEV.value,
+					exposureCompensation: inputEV.value,
 				})
 				.then(blob => createImageBitmap(blob))
 				.then(imageBitmap => {
