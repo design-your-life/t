@@ -34,7 +34,7 @@
 		<input id=inputEV type="range">
 		<input id=inputZoom type="range">
 		<button id="takePhotoButton" disabled>📷</button>
-		<canvas></canvas>
+		<canvas style="height:55em"></canvas>
 
 		<script>
 			var ChromeSamples = {
@@ -78,7 +78,7 @@
 
 					await sleep(1000) // crbug.com/711524
 
-					track = mediaStream.getVideoTracks()[0]
+					track = mediaStream.getVideoTracks()[1] || mediaStream.getVideoTracks()[0]
 					capabilities = track.getCapabilities()
 					imageCapture = new ImageCapture(track)
 
