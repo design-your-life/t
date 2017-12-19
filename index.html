@@ -73,15 +73,17 @@
 
 		<script>
 navigator.mediaDevices.enumerateDevices().then( inputs => {
-	console.log( `${ inputs }` )
-	document.write(`Девайсы: <pre>${ JSON.stringify(inputs) }</pre>` )
+	inputs = inputs
+		.filter( _ => _.kind=='videoinput' )
+	// console.log( `${ inputs }` )
+	document.write(`Девайсы: <pre>${ JSON.stringify(inputs,null,'	') }</pre>` )
 	navigator.mediaDevices.getUserMedia({video: true})
 		.then(async mediaStream => {
 			document.querySelector('video').srcObject = mediaStream
 
 			await sleep(1000) // crbug.com/711524
 
-			track = mediaStream.getVideoTracks()[1] || mediaStream.getVideoTracks()[0]
+			track = mediaStream.getVideoTracks()[0]
 			capabilities = track.getCapabilities()
 			imageCapture = new ImageCapture(track)
 
@@ -112,7 +114,7 @@ navigator.mediaDevices.enumerateDevices().then( inputs => {
 		.then(photoSettings => {
 			inputResolution.value = photoSettings.imageWidth
 		})
-		.catch(error => ChromeSamples.log('Argh!', error.name || error))
+		// .catch(error => ChromeSamples.log('Argh!', error.name || error))
 })
 
 function onTakePhotoButtonClick() {
