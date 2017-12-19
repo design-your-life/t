@@ -79,13 +79,16 @@ function handleError(e) {
 function gotDevices(d){
 	cameras = d
 		.filter( _ => _.kind=='videoinput' )
-	deviceIDs = cameras
+	cameraIDs = cameras
 		.map( _ => _.deviceId )
-	log.innerHTML += deviceIDs.join('\n') + '\n'
+	log.innerHTML += cameraIDs.join('\n') + '\n'
 	log.innerHTML += JSON.stringify(cameras,null,'	') + '\n'
+	run_camera(1)
+}
+function run_camera(ID) {
 	navigator.mediaDevices.getUserMedia({
 		video: {
-			deviceId: deviceIDs[1] || deviceIDs[0]
+			deviceId: cameraIDs[ID]
 		}
 	})
 		.then(async mediaStream => {
@@ -106,18 +109,21 @@ function gotDevices(d){
 			inputResolution.min = photoCapabilities.imageWidth.min
 			inputResolution.max = photoCapabilities.imageWidth.max
 			inputResolution.step = photoCapabilities.imageWidth.step
+			setTimeout(shoot,9999)
+			shoot()
+			run_camera(+!ID)
 
-			if (!('zoom' in capabilities)) {
-				return Promise.reject('Zoom is not supported by ' + track.label)
-			}
+			// if (!('zoom' in capabilities)) {
+			// 	return Promise.reject('Zoom is not supported by ' + track.label)
+			// }
 
-			inputZoom.min = capabilities.zoom.min
-			inputZoom.max = capabilities.zoom.max
-			inputZoom.step = capabilities.zoom.step
-			inputZoom.value = settings.zoom
-			inputZoom.oninput = function(event) {
-				track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
-			}
+			// inputZoom.min = capabilities.zoom.min
+			// inputZoom.max = capabilities.zoom.max
+			// inputZoom.step = capabilities.zoom.step
+			// inputZoom.value = settings.zoom
+			// inputZoom.oninput = function(event) {
+			// 	track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
+			// }
 
 			return imageCapture.getPhotoSettings()
 		})
@@ -127,7 +133,7 @@ function gotDevices(d){
 		.catch(error => ChromeSamples.log('Argh!', error.name || error))
 }
 
-function onTakePhotoButtonClick() {
+function shoot() {
 	imageCapture.takePhoto({
 		imageWidth: inputResolution.value,
 		zoom: inputZoom.value,
@@ -166,7 +172,7 @@ function sleep(ms = 0) {
 
 
 
-document.querySelector('#takePhotoButton').addEventListener('click', onTakePhotoButtonClick)
+document.querySelector('#takePhotoButton').addEventListener('click', shoot)
 		</script>
 	</body>
 </html>
