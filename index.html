@@ -72,85 +72,89 @@
 
 
 		<script>
-			navigator.mediaDevices.getUserMedia({video: true})
-				.then(async mediaStream => {
-					document.querySelector('video').srcObject = mediaStream
+navigator.mediaDevices.enumerateDevices().then( inputs => {
+	console.log( `${ inputs }` )
+	document.write(`Девайсы: <pre>${ JSON.stringify(inputs) }</pre>` )
+	navigator.mediaDevices.getUserMedia({video: true})
+		.then(async mediaStream => {
+			document.querySelector('video').srcObject = mediaStream
 
-					await sleep(1000) // crbug.com/711524
+			await sleep(1000) // crbug.com/711524
 
-					track = mediaStream.getVideoTracks()[1] || mediaStream.getVideoTracks()[0]
-					capabilities = track.getCapabilities()
-					imageCapture = new ImageCapture(track)
+			track = mediaStream.getVideoTracks()[1] || mediaStream.getVideoTracks()[0]
+			capabilities = track.getCapabilities()
+			imageCapture = new ImageCapture(track)
 
-					return imageCapture.getPhotoCapabilities();
-				})
-				.then(photoCapabilities => {
+			return imageCapture.getPhotoCapabilities();
+		})
+		.then(photoCapabilities => {
 
-					settings = imageCapture.track.getSettings()
+			settings = imageCapture.track.getSettings()
 
-					inputResolution.min = photoCapabilities.imageWidth.min
-					inputResolution.max = photoCapabilities.imageWidth.max
-					inputResolution.step = photoCapabilities.imageWidth.step
+			inputResolution.min = photoCapabilities.imageWidth.min
+			inputResolution.max = photoCapabilities.imageWidth.max
+			inputResolution.step = photoCapabilities.imageWidth.step
 
-					if (!('zoom' in capabilities)) {
-						return Promise.reject('Zoom is not supported by ' + track.label)
-					}
-
-					inputZoom.min = capabilities.zoom.min
-					inputZoom.max = capabilities.zoom.max
-					inputZoom.step = capabilities.zoom.step
-					inputZoom.value = settings.zoom
-					inputZoom.oninput = function(event) {
-						track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
-					}
-
-					return imageCapture.getPhotoSettings()
-				})
-				.then(photoSettings => {
-					inputResolution.value = photoSettings.imageWidth
-				})
-				.catch(error => ChromeSamples.log('Argh!', error.name || error))
-
-			function onTakePhotoButtonClick() {
-				imageCapture.takePhoto({
-					imageWidth: inputResolution.value,
-					zoom: inputZoom.value,
-					exposureCompensation: inputEV.value,
-				})
-				.then(blob => createImageBitmap(blob))
-				.then(imageBitmap => {
-					drawCanvas(imageBitmap)
-					ChromeSamples.log(`Photo size is ${imageBitmap.width}x${imageBitmap.height}`)
-				})
-				.catch(error => ChromeSamples.log(error))
+			if (!('zoom' in capabilities)) {
+				return Promise.reject('Zoom is not supported by ' + track.label)
 			}
 
-			document.querySelector('video').addEventListener('play', function() {
-				document.querySelector('#takePhotoButton').disabled = false
-			})
-
-			/* Utils */
-
-			function drawCanvas(img) {
-				const canvas = document.querySelector('canvas')
-				canvas.width = getComputedStyle(canvas).width.split('px')[0] * 8
-				canvas.height = getComputedStyle(canvas).height.split('px')[0] * 8
-				let ratio  = Math.min(canvas.width / img.width, canvas.height / img.height)
-				let x = (canvas.width - img.width * ratio) /2
-				let y = (canvas.height - img.height * ratio) /2
-				canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-				canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
-						x, y, img.width * ratio, img.height * ratio)
+			inputZoom.min = capabilities.zoom.min
+			inputZoom.max = capabilities.zoom.max
+			inputZoom.step = capabilities.zoom.step
+			inputZoom.value = settings.zoom
+			inputZoom.oninput = function(event) {
+				track.applyConstraints({advanced: [ {zoom: event.target.value} ]})
 			}
 
+			return imageCapture.getPhotoSettings()
+		})
+		.then(photoSettings => {
+			inputResolution.value = photoSettings.imageWidth
+		})
+		.catch(error => ChromeSamples.log('Argh!', error.name || error))
+})
 
-			function sleep(ms = 0) {
-				return new Promise(r => setTimeout(r, ms))
-			}
+function onTakePhotoButtonClick() {
+	imageCapture.takePhoto({
+		imageWidth: inputResolution.value,
+		zoom: inputZoom.value,
+		exposureCompensation: inputEV.value,
+	})
+	.then(blob => createImageBitmap(blob))
+	.then(imageBitmap => {
+		drawCanvas(imageBitmap)
+		ChromeSamples.log(`Photo size is ${imageBitmap.width}x${imageBitmap.height}`)
+	})
+	.catch(error => ChromeSamples.log(error))
+}
+
+document.querySelector('video').addEventListener('play', function() {
+	document.querySelector('#takePhotoButton').disabled = false
+})
+
+/* Utils */
+
+function drawCanvas(img) {
+	const canvas = document.querySelector('canvas')
+	canvas.width = getComputedStyle(canvas).width.split('px')[0] * 8
+	canvas.height = getComputedStyle(canvas).height.split('px')[0] * 8
+	let ratio  = Math.min(canvas.width / img.width, canvas.height / img.height)
+	let x = (canvas.width - img.width * ratio) /2
+	let y = (canvas.height - img.height * ratio) /2
+	canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
+	canvas.getContext('2d').drawImage(img, 0, 0, img.width, img.height,
+			x, y, img.width * ratio, img.height * ratio)
+}
+
+
+function sleep(ms = 0) {
+	return new Promise(r => setTimeout(r, ms))
+}
 
 
 
-			document.querySelector('#takePhotoButton').addEventListener('click', onTakePhotoButtonClick)
+document.querySelector('#takePhotoButton').addEventListener('click', onTakePhotoButtonClick)
 		</script>
 	</body>
 </html>
