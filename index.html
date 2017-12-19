@@ -162,7 +162,7 @@ function shoot_loop() {
 	.then(blob => createImageBitmap(blob))
 	.then(imageBitmap => {
 		drawCanvas(imageBitmap)
-		sh()
+		shoot_loop()
 	})
 	.catch(error => ChromeSamples.log(error))
 }
