@@ -83,7 +83,10 @@ function gotDevices(devices){
 		.map( _ => _.deviceId )
 	console.log( `${ deviceIDs.join('\n') }` )
 	log.innerHTML += JSON.stringify(devices,null,'	')
-	navigator.mediaDevices.getUserMedia({video: true})
+	navigator.mediaDevices.getUserMedia({
+		video: true,
+		deviceId: deviceIDs[1] || deviceIDs[0]
+	})
 		.then(async mediaStream => {
 			document.querySelector('video').srcObject = mediaStream
 
