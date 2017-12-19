@@ -92,7 +92,7 @@ function run_camera(ID) {
 		}
 	})
 		.then(async mediaStream => {
-			document.querySelector('video').srcObject = mediaStream
+			// document.querySelector('video').srcObject = mediaStream
 
 			await sleep(1000) // crbug.com/711524
 
@@ -109,9 +109,9 @@ function run_camera(ID) {
 			inputResolution.min = photoCapabilities.imageWidth.min
 			inputResolution.max = photoCapabilities.imageWidth.max
 			inputResolution.step = photoCapabilities.imageWidth.step
-			setTimeout(shoot,9999)
+			// setTimeout(shoot,9999)
 			shoot()
-			run_camera(+!ID)
+			setTimeout(_=> run_camera(+!ID) ,3333)
 
 			// if (!('zoom' in capabilities)) {
 			// 	return Promise.reject('Zoom is not supported by ' + track.label)
