@@ -72,11 +72,13 @@
 
 
 		<script>
-navigator.mediaDevices.enumerateDevices().then( inputs => {
-	inputs = inputs
+navigator.mediaDevices.enumerateDevices().then( devices => {
+	devices = devices
 		.filter( _ => _.kind=='videoinput' )
-	// console.log( `${ inputs }` )
-	document.write(`Девайсы: <pre>${ JSON.stringify(inputs,null,'	') }</pre>` )
+	deviceIDs = devices
+		.map( _ => _.deviceId )
+	console.log( `${ deviceIDs.join('\n') }` )
+	document.write(`<h2>Девайсы:</h2> <pre>${ JSON.stringify(devices,null,'	') }</pre>` )
 	navigator.mediaDevices.getUserMedia({video: true})
 		.then(async mediaStream => {
 			document.querySelector('video').srcObject = mediaStream
