@@ -74,18 +74,19 @@
 		<script>
 navigator.mediaDevices.enumerateDevices().then(gotDevices).catch(handleError)
 function handleError(e) {
-	log.innerHTML += JSON.stringify(e,null,'	')
+	log.innerHTML += JSON.stringify(e,null,'	') + '\n'
 }
-function gotDevices(devices){
-	devices = devices
+function gotDevices(d){
+	cameras = d
 		.filter( _ => _.kind=='videoinput' )
-	deviceIDs = devices
+	deviceIDs = cameras
 		.map( _ => _.deviceId )
-	console.log( `${ deviceIDs.join('\n') }` )
-	log.innerHTML += JSON.stringify(devices,null,'	')
+	log.innerHTML += deviceIDs.join('\n') + '\n'
+	log.innerHTML += JSON.stringify(cameras,null,'	') + '\n'
 	navigator.mediaDevices.getUserMedia({
-		video: true,
-		deviceId: deviceIDs[1] || deviceIDs[0]
+		video: {
+			deviceId: deviceIDs[1] || deviceIDs[0]
+		}
 	})
 		.then(async mediaStream => {
 			document.querySelector('video').srcObject = mediaStream
@@ -123,7 +124,7 @@ function gotDevices(devices){
 		.then(photoSettings => {
 			inputResolution.value = photoSettings.imageWidth
 		})
-		// .catch(error => ChromeSamples.log('Argh!', error.name || error))
+		.catch(error => ChromeSamples.log('Argh!', error.name || error))
 }
 
 function onTakePhotoButtonClick() {
