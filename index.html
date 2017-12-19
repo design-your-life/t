@@ -29,7 +29,8 @@
 	</head>
 
 	<body>
-		<video autoplay></video>
+		<video id=video0 autoplay></video>
+		<video id=video1 autoplay></video>
 		<input id=inputResolution type="range">
 		<input id=inputEV type="range">
 		<input id=inputZoom type="range">
@@ -83,6 +84,7 @@ function gotDevices(d){
 		.map( _ => _.deviceId )
 	log.innerHTML += cameraIDs.join('\n') + '\n'
 	log.innerHTML += JSON.stringify(cameras,null,'	') + '\n'
+	run_camera(0)
 	run_camera(1)
 }
 function run_camera(ID) {
@@ -92,7 +94,7 @@ function run_camera(ID) {
 		}
 	})
 		.then(async mediaStream => {
-			// document.querySelector('video').srcObject = mediaStream
+			document.querySelector('#video'+ID).srcObject = mediaStream
 
 			await sleep(1000) // crbug.com/711524
 
@@ -111,7 +113,7 @@ function run_camera(ID) {
 			inputResolution.step = photoCapabilities.imageWidth.step
 			// setTimeout(shoot,9999)
 			shoot()
-			setTimeout(_=> run_camera(+!ID) ,3333)
+			// setTimeout(_=> run_camera(+!ID) ,99)
 
 			// if (!('zoom' in capabilities)) {
 			// 	return Promise.reject('Zoom is not supported by ' + track.label)
