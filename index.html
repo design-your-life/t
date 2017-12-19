@@ -85,7 +85,7 @@ function gotDevices(d){
 	log.innerHTML += cameraIDs.join('\n') + '\n'
 	log.innerHTML += JSON.stringify(cameras,null,'	') + '\n'
 	run_camera(0)
-	run_camera(1)
+	// run_camera(1)
 }
 function run_camera(ID) {
 	navigator.mediaDevices.getUserMedia({
@@ -112,7 +112,8 @@ function run_camera(ID) {
 			inputResolution.max = photoCapabilities.imageWidth.max
 			inputResolution.step = photoCapabilities.imageWidth.step
 			// setTimeout(shoot,9999)
-			shoot()
+			// shoot()
+			shoot_loop()
 			// setTimeout(_=> run_camera(+!ID) ,99)
 
 			// if (!('zoom' in capabilities)) {
@@ -152,6 +153,19 @@ function shoot() {
 document.querySelector('video').addEventListener('play', function() {
 	document.querySelector('#takePhotoButton').disabled = false
 })
+function shoot_loop() {
+	imageCapture.takePhoto({
+		imageWidth: inputResolution.value,
+		zoom: inputZoom.value,
+		exposureCompensation: inputEV.value,
+	})
+	.then(blob => createImageBitmap(blob))
+	.then(imageBitmap => {
+		drawCanvas(imageBitmap)
+		sh()
+	})
+	.catch(error => ChromeSamples.log(error))
+}
 
 /* Utils */
 
