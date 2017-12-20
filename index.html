@@ -96,7 +96,7 @@ function run_camera(ID) {
 		}
 	})
 		.then(async mediaStream => {
-			document.querySelector('#video'+ID).srcObject = mediaStream
+			// document.querySelector('#video'+ID).srcObject = mediaStream
 
 			await sleep(1000) // crbug.com/711524
 
@@ -137,13 +137,14 @@ function run_camera(ID) {
 		})
 		.catch(error => ChromeSamples.log('Argh!', error.name || error))
 }
-
+ii=0
 function shoot() {
 	imageCapture.takePhoto({
 		imageWidth: inputResolution.value,
 		zoom: inputZoom.value,
 		exposureCompensation: inputEV.value,
 	})
+	// .then(blob => {console.log( `${ ++ii }` )})
 	.then(blob => createImageBitmap(blob))
 	.then(imageBitmap => {
 		drawCanvas(imageBitmap)
@@ -173,8 +174,8 @@ function shoot_loop() {
 
 function drawCanvas(img) {
 	const canvas = document.querySelector('canvas')
-	canvas.width = getComputedStyle(canvas).width.split('px')[0] * 8
-	canvas.height = getComputedStyle(canvas).height.split('px')[0] * 8
+	canvas.width = getComputedStyle(canvas).width.split('px')[0]// * 8
+	canvas.height = getComputedStyle(canvas).height.split('px')[0]// * 8
 	let ratio  = Math.min(canvas.width / img.width, canvas.height / img.height)
 	let x = (canvas.width - img.width * ratio) /2
 	let y = (canvas.height - img.height * ratio) /2
