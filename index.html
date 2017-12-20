@@ -29,7 +29,7 @@
 	</head>
 
 	<body>
-		<!-- <video id=video0 autoplay style="height:44em;float:left"></video> -->
+		<video id=video0 autoplay style="height:44em;float:left"></video>
 		<video id=video1 autoplay style="height:33em;float:left"></video>
 		<input id=inputResolution type="range">
 		<input id=inputEV type="range">
@@ -96,7 +96,7 @@ function run_camera(ID) {
 		}
 	})
 		.then(async mediaStream => {
-			// document.querySelector('#video'+ID).srcObject = mediaStream
+			document.querySelector('#video'+ID).srcObject = mediaStream
 
 			await sleep(1000) // crbug.com/711524
 
